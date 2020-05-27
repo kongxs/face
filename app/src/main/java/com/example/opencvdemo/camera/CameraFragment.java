@@ -619,8 +619,6 @@ public class CameraFragment extends Fragment {
 
         protected VisionDetRet[] doInBackground(Bitmap... bp) {
 
-            Log.d(TAG, "byte to bitmap");
-
             long startTime = System.currentTimeMillis();
 
             Bitmap param = bp[0];
@@ -628,14 +626,19 @@ public class CameraFragment extends Fragment {
             VisionDetRet[] result = MainActivity.detector(param);
 
             long endTime = System.currentTimeMillis();
-            Log.d(TAG, "Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
+//            Log.d(TAG, "Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
 
             return result;
         }
 
         protected void onPostExecute(VisionDetRet[] bitmap) {
+
+//            long startTime = System.currentTimeMillis();
+
             mBoundingBoxView.setResults(bitmap);
             mIsDetecting = false;
+//            long endTime = System.currentTimeMillis();
+//            Log.d(TAG, "Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
         }
     }
 }

@@ -39,6 +39,7 @@ public class BoundingBoxView extends SurfaceView implements SurfaceHolder.Callba
         mPaint.setColor(Color.RED);
         mPaint.setStrokeWidth(5f);
         mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setTextSize(35);
 
 
     }
@@ -79,8 +80,8 @@ public class BoundingBoxView extends SurfaceView implements SurfaceHolder.Callba
             List<Point> points = detRet.getPoints();
             for (int j  = 0; j < points.size(); j++) {
                 Point point = points.get(j);
-
-                canvas.drawCircle(point.x,point.y,4,mPaint);
+//                canvas.drawCircle(point.x,point.y,4,mPaint);
+                canvas.drawText(String.valueOf(j+1),point.x,point.y,mPaint);
             }
         }
 

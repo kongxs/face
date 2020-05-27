@@ -1,18 +1,11 @@
-
-
 #include <android/log.h>
 #include <android/bitmap.h>
 #include "matutil.h"
 #include "face_detector.h"
 #include "jni_primitives.h"
-//#include "opencv2/highgui.hpp"
-//#include "opencv2/core/core.hpp"
-
-//extern "C" {
 #include <dlib/opencv.h>
 #include <dlib/image_processing.h>
 #include <dlib/image_processing/frontal_face_detector.h>
-//}
 
 using namespace cv;
 using namespace std;
@@ -22,6 +15,8 @@ using namespace dlib;
 //人脸检测核心模型
 frontal_face_detector detector = get_frontal_face_detector();
 shape_predictor sp;
+
+CascadeClassifier faceCascade;//opencv
 
 #define TAG "opencvLogTesst"
 
@@ -345,6 +340,8 @@ Java_com_example_opencvdemo_MainActivity_initDlib(JNIEnv *env, jclass clazz) {
 
     deserialize(faces) >> sp;
 
+    faceCascade.load("/storage/emulated/0/haarcascade_frontalface_alt2.xml");
+
 
     LOGE("dlib init success ...");
 }
@@ -367,43 +364,23 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_example_opencvdemo_MainActivity_detector(JNIEnv *env, jclass clazz, jobject bitmap) {
 
 
+    clock_t start = clock();
+
     Mat src = bitmap2Mat(env, bitmap);
 
-    Mat rgbimg;
+    Mat rgbimg  , face_gray;
     cvtColor(src, rgbimg, COLOR_RGBA2BGR);
 
+    cvtColor( rgbimg, face_gray, CV_BGRA2GRAY );  //rgb类型转换为灰度类型
+    equalizeHist( face_gray, face_gray );   //直方图均衡化
+
     dlib::cv_image<bgr_pixel> dlibImg(rgbimg);
-
-
+    
     const Vector<dlib::rectangle> &vector = detector(dlibImg);
 
-//
-//        if(pts2d.size() == 68){
-//            cv::rectangle(rgbimg, box, Scalar(255, 0, 0), 2, 8, 0);
-//
-//            for (int i = 0; i < 17; i++)	{
-//                Point_<double> &center1 = (pts2d)[i];
-//
-//                LOGE("point x : %d , y : %d \n" , center1.x, center1.y);
-//
-//                circle(rgbimg, center1, 4, cv::Scalar(255, 0, 0), -1, 8, 0);
-//            }
-//            for (int i = 17; i < 27; i++)	circle(rgbimg, (pts2d)[i], 4, cv::Scalar(255, 0, 0), -1, 8, 0);
-//            for (int i = 27; i < 31; i++)	circle(rgbimg, (pts2d)[i], 4, cv::Scalar(255, 0, 0), -1, 8, 0);
-//            for (int i = 31; i < 36; i++)	circle(rgbimg, (pts2d)[i], 4, cv::Scalar(255, 0, 0), -1, 8, 0);
-//            for (int i = 36; i < 48; i++)	circle(rgbimg, (pts2d)[i], 4, cv::Scalar(255, 0, 0), -1, 8, 0);
-//            for (int i = 48; i < 60; i++)	circle(rgbimg, (pts2d)[i], 4, cv::Scalar(255, 0, 0), -1, 8, 0);
-//            for (int i = 60; i < 68; i++)	circle(rgbimg, (pts2d)[i], 4, cv::Scalar(255, 0, 0), -1, 8, 0);
-//        }
-//
-//
-//        char *faces = "/storage/emulated/0/face.png";
-//        imwrite(faces , rgbimg);
-//
-//    }
+    clock_t dettector = clock() - start;
 
-
-
+    LOGE("detector time ： %d \n" , dettector/CLOCKS_PER_SEC);
 
     jobjectArray pArray = JNI_VisionDetRet::createJObjectArray(env, vector.size());
 
@@ -434,12 +411,15 @@ Java_com_example_opencvdemo_MainActivity_detector(JNIEnv *env, jclass clazz, job
 
             shapes.push_back(detection);
         }
+
+        LOGE("finish time ： %d \n" , (clock() - dettector) / CLOCKS_PER_SEC);
     }
 
-    if (!shapes.empty()) {
-
-        int faceNumber = shapes.size();
-        for (int j = 0; j < faceNumber; j++) {
+//    if (!shapes.empty()) {
+//
+//        int faceNumber = shapes.size();
+//        for (int j = 0; j < faceNumber; j++) {
+//            1.
 //            for (int i = 0; i < 68; i++) {
 //                full_object_detection &face = shapes[j];
 //                point &part = face.part(i);
@@ -452,29 +432,33 @@ Java_com_example_opencvdemo_MainActivity_detector(JNIEnv *env, jclass clazz, job
 //                cv::circle(rgbimg, cvPoint(x, y), 3, cv::Scalar(0, 0, 255));
 //            }
 
-            full_object_detection &face = shapes[j];
-
-            for (int i = 17; i < 27; i++)//眉毛
-                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
-
-            for (int i = 27; i < 31; i++)//鼻根 到鼻尖
-                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
-
-            for (int i = 31; i < 36; i++)// 鼻子下沿
-                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
-
-            for (int i = 36; i < 48; i++) // 左右眼睛
-                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
-
-            for (int i = 48; i < 60; i++) // 上唇上和下唇下  -> 嘴巴外轮廓
-                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
-
-            for (int i = 60; i < 68; i++) // 上唇下和下唇上  -> 嘴巴内轮廓
-                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
-        }
+//            2.
+//            full_object_detection &face = shapes[j];
+//
+//            for (int i = 17; i < 27; i++)//眉毛
+//                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
+//
+//            for (int i = 27; i < 31; i++)//鼻根 到鼻尖
+//                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
+//
+//            for (int i = 31; i < 36; i++)// 鼻子下沿
+//                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
+//
+//            for (int i = 36; i < 48; i++) // 左右眼睛
+//                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
+//
+//            for (int i = 48; i < 60; i++) // 上唇上和下唇下  -> 嘴巴外轮廓
+//                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
+//
+//            for (int i = 60; i < 68; i++) // 上唇下和下唇上  -> 嘴巴内轮廓
+//                circle(rgbimg, Point(face.part(i).x(),face.part(i).y()), 4, cv::Scalar(0, 0, 255), -1, 8, 0);
+//        }
 //        char *faces = "/storage/emulated/0/face.png";
 //        imwrite(faces , rgbimg);
-    }
+//    }
+
+
+
 
 
     return pArray;
@@ -515,6 +499,8 @@ Java_com_example_opencvdemo_MainActivity_detector2(JNIEnv *env, jclass clazz, jl
     Mat &src = *(Mat*)ptr;
 
     Mat rgbimg;
+
+
     cvtColor(src, rgbimg, COLOR_RGBA2BGR);
 
     dlib::cv_image<bgr_pixel> dlibImg(rgbimg);
@@ -524,4 +510,84 @@ Java_com_example_opencvdemo_MainActivity_detector2(JNIEnv *env, jclass clazz, jl
 //    LOGE("size : %d \n" , vector.size());
 
     return mat2Bitmap(env,src,false,getConfig(env));
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_example_opencvdemo_MainActivity_detectorInCV(JNIEnv *env, jclass clazz, jobject bitmap) {
+
+    clock_t start = clock();
+
+    Mat src = bitmap2Mat(env, bitmap);
+
+    Mat rgbimg , face_gray;
+
+    cvtColor(src, rgbimg, COLOR_RGBA2BGR);
+
+    dlib::cv_image<bgr_pixel> dlibImg(rgbimg);
+
+    cvtColor( src, face_gray, CV_BGR2GRAY );  //rgb类型转换为灰度类型
+    equalizeHist( face_gray, face_gray );   //直方图均衡化
+    std::vector<Rect> faces;
+
+
+    faceCascade.detectMultiScale(face_gray, faces, 1.2, 5, 0, Size(30, 30));
+
+
+    LOGE(" finish time ： %d \n" , (clock() - start) / CLOCKS_PER_SEC);
+
+    Vector<dlib::rectangle> vector ;
+
+    if (faces.size()>0) {
+        for (size_t i = 0; i < faces.size(); i++) {
+
+            Rect_<int> &rect = faces[i];
+            dlib::rectangle det;
+            //将opencv检测到的矩形转换为dlib需要的数据结构，这里没有判断检测不到人脸的情况
+            det.set_left(faces[0].x);
+            det.set_top(faces[0].y);
+            det.set_right(faces[0].x+faces[0].width);
+            det.set_bottom(faces[0].y+faces[0].height);
+
+            vector.push_back(det);
+        }
+    }
+
+
+    jobjectArray pArray = JNI_VisionDetRet::createJObjectArray(env, vector.size());
+
+    size_t size = vector.size();
+
+    std::vector<dlib::full_object_detection> shapes;
+
+    if (size > 0) {
+
+        for (int i = 0; i < size; i++) {
+
+            jobject pJobject = JNI_VisionDetRet::createJObject(env);
+            env->SetObjectArrayElement(pArray, i, pJobject);
+            dlib::rectangle rect = vector[i];
+
+            g_pJNI_VisionDetRet->setRect(env, pJobject, rect.left(), rect.top(),
+                                         rect.right(), rect.bottom());
+
+            const full_object_detection &detection = sp(dlibImg, rect);
+
+            for (int i = 0; i < 68; i++) {
+                int x = detection.part(i).x();
+                int y = detection.part(i).y();
+
+                g_pJNI_VisionDetRet->addPoint(env,pJobject,x,y);
+
+            }
+
+            shapes.push_back(detection);
+        }
+
+//        LOGE("finish time ： %d \n" , (clock() - dettector) / CLOCKS_PER_SEC);
+    }
+
+
+    return pArray;
+
 }

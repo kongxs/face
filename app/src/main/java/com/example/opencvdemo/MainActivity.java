@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static native VisionDetRet[] detector(Bitmap bitmap);
 
+    public static native VisionDetRet[] detectorInCV(Bitmap bitmap);
+
     public static native Bitmap detector2(long ptrpoint);
 
 
