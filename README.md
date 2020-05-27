@@ -1,1 +1,1 @@
-opencv + dlib 
+opencv + dlib  实现 调用摄像头进行人脸失败，可以获取到68个关键点 
