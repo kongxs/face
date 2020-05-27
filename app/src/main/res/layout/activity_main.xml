@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+    <Button
+        android:id="@+id/cvcamera"
+        android:layout_height="50dp"
+        android:layout_width="match_parent"
+        android:text="cv camera CameraActivity" />
+    <Button
+        android:id="@+id/camera"
+        android:layout_height="50dp"
+        android:layout_width="match_parent"
+        android:text="camera CameraActivity2" />
+
+    <Button
+        android:id="@+id/camera2"
+        android:layout_height="50dp"
+        android:layout_width="match_parent"
+        android:text="camera2 CameraAct2" />
+
+    <ImageView
+        android:id="@+id/origin"
+        android:src="@drawable/ic_launcher_background"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent" />
+
+
+    <ImageView
+        android:id="@+id/gray"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent" />
+
+
+
+</LinearLayout>
