@@ -13,6 +13,7 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -20,6 +21,8 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -222,6 +225,36 @@ public class CameraFragment extends Fragment {
      * Orientation of the camera sensor
      */
     private int mSensorOrientation;
+    private ImageReader previewReader;
+
+    private ImageReader.OnImageAvailableListener mOnGetPreviewListener = new ImageReader.OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader imageReader) {
+
+
+            Log.e("opencvLogTesst"  , "onImageAvailable");
+
+//            Image image = imageReader.acquireLatestImage();
+//
+//            if (image == null) {
+//                return;
+//            }
+//
+//            if (mIsComputing) {
+//                image.close();
+//                return;
+//            }
+//
+//            mIsComputing = true;
+
+
+//            YuvImage yuvImage = new YuvImage()
+
+
+
+        }
+    };
+    private boolean mIsComputing = false;
 
     /**
      * Shows a {@link Toast} on the UI thread.
@@ -518,10 +551,17 @@ public class CameraFragment extends Fragment {
             // This is the output Surface we need to start preview.
             Surface surface = new Surface(texture);
 
+            previewReader =
+                    ImageReader.newInstance(
+                            mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.JPEG, 2);
+
+            previewReader.setOnImageAvailableListener(mOnGetPreviewListener, mBackgroundHandler);
+
             // We set up a CaptureRequest.Builder with the output Surface.
             mPreviewRequestBuilder
                     = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
+
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(Arrays.asList(surface),

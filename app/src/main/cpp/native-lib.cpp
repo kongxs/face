@@ -22,6 +22,7 @@ CascadeClassifier faceCascade;//opencv
 
 #define LOGE(FORMAT,...) __android_log_print(ANDROID_LOG_ERROR, TAG, FORMAT, ##__VA_ARGS__);
 
+
 //JNI_VisionDetRet *g_pJNI_VisionDetRet;
 
 JavaVM *g_javaVM = NULL;
@@ -85,8 +86,6 @@ namespace {
     DetPtr const getDetPtr(JNIEnv *env, jobject thiz) {
         std::lock_guard<std::mutex> lock(gLock);
         const shared_ptr<JNI_FaceDet> &ptr = getJNI_FaceDet(env);
-
-        LOGE("getdetprt ------  ");
 
         return ptr->getDetectorPtrFromJava(env, thiz);
     }
@@ -442,6 +441,9 @@ extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_lightweh_dlib_FaceDet_jniBitmapDet(JNIEnv *env,jclass clazz, jobject bitmap) {
 
+
+
+
     cv::Mat rgbaMat;
     cv::Mat bgrMat;
 
@@ -486,82 +488,54 @@ Java_com_example_opencvdemo_MainActivity_detector2(JNIEnv *env, jclass clazz, jl
     return mat2Bitmap(env,src,false,getConfig(env));
 }
 
+jobjectArray getRecResult(JNIEnv *env, DetPtr faceDetector, const std::vector<dlib::rectangle> &vector);
+
 extern "C"
 JNIEXPORT jobjectArray JNICALL
 Java_com_example_opencvdemo_MainActivity_detectorInCV(JNIEnv *env, jclass clazz, jobject bitmap) {
 
-    clock_t start = clock();
+    cv::Mat rgbaMat;
+    cv::Mat bgrMat;
+    rgbaMat = bitmap2Mat(env, bitmap);
+    cv::cvtColor(rgbaMat, bgrMat, cv::COLOR_RGBA2BGR);
 
-    Mat src = bitmap2Mat(env, bitmap);
+    DetPtr mDetPtr = getDetPtr(env, clazz);
+    Mat image = bgrMat;
+    LOGE("begain detect .... ");
+    if (image.empty())
+        return 0;
 
-    Mat rgbimg , face_gray;
-
-    cvtColor(src, rgbimg, COLOR_RGBA2BGR);
-
-    dlib::cv_image<bgr_pixel> dlibImg(rgbimg);
-
-    cvtColor( src, face_gray, CV_BGR2GRAY );  //rgb类型转换为灰度类型
-    equalizeHist( face_gray, face_gray );   //直方图均衡化
-    std::vector<Rect> faces;
-
-
-    faceCascade.detectMultiScale(face_gray, faces, 1.2, 5, 0, Size(30, 30));
-
-
-    LOGE(" finish time ： %d \n" , (clock() - start) / CLOCKS_PER_SEC);
-
-    Vector<dlib::rectangle> vector ;
-
-    if (faces.size()>0) {
-        for (size_t i = 0; i < faces.size(); i++) {
-
-            Rect_<int> &rect = faces[i];
-            dlib::rectangle det;
-            //将opencv检测到的矩形转换为dlib需要的数据结构，这里没有判断检测不到人脸的情况
-            det.set_left(faces[0].x);
-            det.set_top(faces[0].y);
-            det.set_right(faces[0].x+faces[0].width);
-            det.set_bottom(faces[0].y+faces[0].height);
-
-            vector.push_back(det);
-        }
+    if (image.channels() == 1) {
+        cv::cvtColor(image, image, CV_GRAY2BGR);
     }
 
+    dlib::cv_image<dlib::bgr_pixel> dlib_image(image);
+    
+    __android_log_print(ANDROID_LOG_ERROR,"opencvLogTesst" ,  "begain face_detector ");
 
-    jobjectArray pArray = JNI_VisionDetRet::createJObjectArray(env, vector.size());
+    const std::vector<dlib::rectangle> &vector = detector(dlib_image);
 
-    size_t size = vector.size();
+    __android_log_print(ANDROID_LOG_ERROR,"opencvLogTesst" ,  "end face_detector ");
 
-    std::vector<dlib::full_object_detection> shapes;
+    LOGE("end detect .... ");
+    
 
-    if (size > 0) {
+    return getRecResult(env, mDetPtr, vector);
 
-        for (int i = 0; i < size; i++) {
+}
 
-            jobject pJobject = JNI_VisionDetRet::createJObject(env);
-            env->SetObjectArrayElement(pArray, i, pJobject);
-            dlib::rectangle rect = vector[i];
+jobjectArray getRecResult(JNIEnv *env, DetPtr faceDetector, const std::vector<dlib::rectangle> &vector) {
+    LOGE("begain getRecResult .... size :  \n" , vector.size());
+    jobjectArray jDetRetArray = JNI_VisionDetRet::createJObjectArray(env, vector.size());
 
-            g_pJNI_VisionDetRet->setRect(env, pJobject, rect.left(), rect.top(),
-                                         rect.right(), rect.bottom());
+    for (int i = 0; i < vector.size(); i++) {
+        jobject jDetRet = JNI_VisionDetRet::createJObject(env);
+        env->SetObjectArrayElement(jDetRetArray, i, jDetRet);
 
-            const full_object_detection &detection = sp(dlibImg, rect);
+        dlib::rectangle rect = vector[i];
 
-            for (int i = 0; i < 68; i++) {
-                int x = detection.part(i).x();
-                int y = detection.part(i).y();
-
-                g_pJNI_VisionDetRet->addPoint(env,pJobject,x,y);
-
-            }
-
-            shapes.push_back(detection);
-        }
-
-//        LOGE("finish time ： %d \n" , (clock() - dettector) / CLOCKS_PER_SEC);
+        g_pJNI_VisionDetRet->setRect(env, jDetRet, rect.left(), rect.top(),
+                                     rect.right(), rect.bottom());
     }
-
-
-    return pArray;
-
+    return jDetRetArray;
 }

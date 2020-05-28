@@ -15,7 +15,7 @@
 class FaceDetector {
 private:
 
-    dlib::frontal_face_detector face_detector;
+    dlib::frontal_face_detector face_detector  = dlib::get_frontal_face_detector();
     vector<dlib::rectangle> det_rects;
 
 public:

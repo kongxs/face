@@ -7,9 +7,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.Nullable;
 
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.JavaCameraView;
-import org.opencv.core.Mat;
 
 public class CameraActivity2 extends Activity {
     @Override

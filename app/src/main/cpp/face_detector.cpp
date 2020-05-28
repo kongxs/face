@@ -1,7 +1,7 @@
 //
 // Created by Lightweh on 2018/11/21.
 //
-
+#include <android/log.h>
 #include "face_detector.h"
 
 FaceDetector::FaceDetector() {
@@ -21,7 +21,11 @@ int FaceDetector::Detect(const cv::Mat &image) {
 
     det_rects.clear();
 
+    __android_log_print(ANDROID_LOG_ERROR,"opencvLogTesst" ,  "begain face_detector ");
+
     det_rects = face_detector(dlib_image);
+
+    __android_log_print(ANDROID_LOG_ERROR,"opencvLogTesst" ,  "end face_detector ");
 
     return det_rects.size();
 }
