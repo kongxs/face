@@ -29,9 +29,36 @@ android {
         jni.srcDirs = []
     }
 
+    signingConfigs {
+        debug {
+            keyAlias 'pushdemo'
+            keyPassword 'pushdemo'
+            storeFile file('demo.jks')
+            storePassword 'pushdemo'
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+
+        release {
+            keyAlias 'pushdemo'
+            keyPassword 'pushdemo'
+            storeFile file('demo.jks')
+            storePassword 'pushdemo'
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

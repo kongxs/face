@@ -284,11 +284,9 @@ Java_com_example_opencvdemo_MainActivity_nv21ToBitmap(JNIEnv *env, jclass clazz,
 
     cvtColor(yuvimg, rgbimg, COLOR_YUV2RGB_NV21);
 
-//    whiteFace2(rgbimg,  1.5,30);
-
 //    //旋转
 //    Point2f center( (float)(height / 2) , (float) (width/2));
-//    Mat affine_matrix = getRotationMatrix2D( center, 90, 1.0 );//求得旋转矩阵
+//    Mat affine_matrix = getRotationMatrix2D( center, 90, 1.0 );
 //    warpAffine(rgbimg, rgbimg, affine_matrix, rgbimg.size());
 
 
@@ -303,30 +301,8 @@ Java_com_example_opencvdemo_MainActivity_nv21ToBitmap(JNIEnv *env, jclass clazz,
 //    float scalX = rectUp.right() / rectOri.right();
 //    LOGE("%f == %f",scalY, scalX);
 
-    //导入实现的png图片，dlib
-//    array2d<rgb_pixel> img;
-//    load_image(img, path1);
-
     const Vector<dlib::rectangle> &vector = detector(dlibImg);
     LOGE("检测到 %d 个 \n "  ,  vector.size());
-//
-//    if (faceRects.size() > 0) {
-//        LOGE("检测到%d个人脸", faceRects.size());
-//        for (int i = 0; i < faceRects.size(); ++i) {
-//            cv::rectangle(yuvimg,
-//                          cv::Point((int)faceRects[i].left(), (int)faceRects[i].top()),
-//                          cv::Point((int)faceRects[i].right(), (int)faceRects[i].bottom()),
-//                          cv::Scalar(255, 0, 255),
-//                          2);
-//        }
-////        yuvimg = yuvimg.clone();
-////        cv::rotate(img, img, ROTATE_90_CLOCKWISE);
-//    } else
-//    {
-//        LOGE("未能检测到人脸");
-//    }
-//
-//    cv::cvtColor(yuvimg, yuvimg, CV_BGR2RGBA); //JavaCameraView显示图像需要RGBA通道
 
     jobject pJobject = mat2Bitmap(env, rgbimg, false, NULL);
 
@@ -336,8 +312,6 @@ JNIEXPORT void JNICALL
 Java_com_example_opencvdemo_MainActivity_initDlib(JNIEnv *env, jclass clazz) {
 
     char *faces = "/storage/emulated/0/shape_predictor_68_face_landmarks.dat";
-
-
     deserialize(faces) >> sp;
 
     faceCascade.load("/storage/emulated/0/haarcascade_frontalface_alt2.xml");
